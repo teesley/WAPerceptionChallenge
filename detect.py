@@ -15,18 +15,19 @@ mask = cv2.inRange(hsv, lr, ur)
 # finds the cones in the mask by finding all of the contours in the mask
 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-#top left x-cord of image
+#top left x-cord of image (impo = important)
 impox = 0
 #top left y-cord of image
 impoy = 0
 # width of image we will search
 impow = 1816
-# region at the top of image to exclude (cones are not found in the top 626 pixels of the image)
+# region at the top of image to exclude (cones are not found in roughly the top 650 pixels of the image)
 # therefore it is unecessary to include that area
 impoh = 650
 
 # x and y coordinates that will help us draw our line through the cones
 # sets the boundaries for where we start and finish the lines
+# (b -> bottom), (t -> top), (lef -> left), (rig -> right)
 blefy = 1816
 tlefy = 0
 brigy = 1816
@@ -37,9 +38,9 @@ brigx = 0
 trigx = 0
 
 
-# Go through all the contours which represent where we hope cones are detected
+# Go through all the contours which represent where we hope think are detected
 # and keep track of the minimum and maximum y values in the area we are searching
-# We keep track of the coordinates associated with this min and max y so that later
+# We keep track of the coordinates associated with this min and max x and y so that later
 # we know where to map the start and end of our line on the image to successfully
 # draw a line through each row of cones
 for c in contours:
@@ -47,52 +48,32 @@ for c in contours:
         x, y = p[0]
         # If x is in an important (impo) region, make updates to left line 
         # (less than half the width of image)
-        if (x >= impox and x < impow/2) and (y >= impoh): # left half of the image
-            if(y < blefy):
-                # example of keeping track of x and y for minimum y
-                # as discusssed in above comment
+        
+        # If x is in the important region on the left half of the image
+        if (x >= impox and x < impow/2) and (y >= impoh): 
+            # If it is less than bottom left, update blef coordinates
+            if(y < blefy): 
                 blefy = y
                 blefx = x
+            # If it is greater than top left, update tlef coordinates
             if(y > tlefy):
                 tlefy = y
                 tlefx = x
-        # X in range for important region, make updates to right line
-        # because greater than half the width of image
-        if (x >= impow/2 and x < impow) and (y >= impoh): # right half of the image
-            if(y < brigy): # if currently lowest cone of the right side
-                brigy = y
-                brigx = x
-            if(y > trigy): # if currently highest cone of the right side
-                trigy = y
-                trigx = x
-
-for c in contours:
-    for p in c:
-        x, y = p[0]
-        # If x is in an important (impo) region, make updates to left line 
-        # (less than half the width of image)
-        if((x >= impox and x < impow/2) and (y >= impoh)):
-            if(y < blefy):
-                # example of keeping track of x and y for minimum y
-                # as discusssed in above comment
-                blefy = y
-                blefx = x
-            if(y > tlefy):
-                tlefy = y
-                tlefx = x
-        # X in range for important region, make updates to right line
-        # because greater than half the width of image
-        if((x >= impow/2 and x < impow) and (y >= impoh)):
+        # X in range for important region on the rights side of the image
+        if (x >= impow/2 and x < impow) and (y >= impoh):
+            # If y is less than the bottom right y, update brigy coordinates
             if(y < brigy):
                 brigy = y
                 brigx = x
-            if(y > trigy):
+            # If y is greater than the top right y, set trigy to x and y coords
+            if(y > trigy): 
                 trigy = y
                 trigx = x
 
 # Now that we know the key points where the lines will start and end on each side
 # we can use this to calculate where the line will be
 
+# Good old y = mx+b, we will use this to plot our lines
 leftM = (tlefy - blefy)/(tlefx - blefx)
 leftB = tlefy - (leftM * tlefx)
 
