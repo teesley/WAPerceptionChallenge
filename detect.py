@@ -1,13 +1,16 @@
 import cv2
+import numpy as np
 
 # Load in the image given to us
-image = cv2.imread("red.png")
+img = cv2.imread("red.png")
 
 # converts image into HSV color format
-hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 # used a HSV color thresholder to determine optimal lower and upper
 # bounds to best detect the color of the cone for the mask
-mask = cv2.inRange(hsv, (177, 194, 156), (179, 255, 255))
+lr = np.array([177, 194, 156])
+ur = np.array([179, 255, 255])
+mask = cv2.inRange(hsv, lr, ur)
 
 # finds the cones in the mask by finding all of the contours in the mask
 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -43,7 +46,7 @@ trigx = 0
 for c in contours:
     for p in c:
         x, y = p[0]
-        if(x >= impox and x < impow/2) and (y > impoh):
+        if(x >= impox and x < impow/2) and (y >= impoh):
             if(y < blefy):
                 # example of keeping track of x and y for minimum y
                 # as discusssed in above comment
@@ -59,7 +62,42 @@ for c in contours:
             if(y > trigy):
                 trigy = y
                 trigx = x
-        
+
+# Now that we know the key points where the lines will start and end on each side
+# we can use this to calculate where the line will be
+
+lm = (tlefy - blefy)/(tlefx - blefx)
+lb = tlefy - (lm * tlefx)
+
+# Have to calculate where the lines will hit the edge of the image
+blex = int(1)
+bley = int(lb)
+tley = int(1)
+tlex = int((tley - lb)/lm)
+
+
+rm = (trigy - brigy)/(trigx - brigx)
+rb = trigy - (rm * trigx)
+
+# Have to calculate where the lines will hit the edge of the image
+brex = int(1816)
+brey = int(rb)
+trey = int(1)
+trex = int((trey - rb)/rm) + 20
+
+p1 = (blex, bley)
+p2 = (tlex, tley)
+p3 = (brigx, bley)
+p4 = (trex, trey)
+
+final_img = cv2.line(img, p1, p2, (0, 0, 255), 4) # draw first line on orignal image 
+final_img = cv2.line(img, p3, p4, (0, 0, 255), 4) # draw second line on original image to give final answer image
+cv2.imwrite('answer.png', final_img)
+
+
+cv2.imshow('Result', final_img)
+cv2.waitk
+cv2.destroyAllWindows() 
         
     
 
