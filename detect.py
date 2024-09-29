@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 
 # Load in the image given to us
 img = cv2.imread("red.png")
@@ -8,9 +7,7 @@ img = cv2.imread("red.png")
 hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 # used a HSV color thresholder to determine optimal lower and upper
 # bounds to best detect the color of the cone for the mask
-lr = np.array([170, 194, 156])
-ur = np.array([179, 255, 255])
-mask = cv2.inRange(hsv, lr, ur)
+mask = cv2.inRange(hsv, (170,194,156), (179,255,255))
 
 # finds the cones in the mask by finding all of the contours in the mask
 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -22,11 +19,12 @@ impoy = 0
 # width of image we will search
 impow = 1816
 # region at the top of image to exclude (cones are not found in roughly the top 650 pixels of the image)
-# therefore it is unecessary to include that area
+# therefore it is unecessary to include that area in the search
 impoh = 650
 
-# x and y coordinates that will help us draw our line through the cones
-# sets the boundaries for where we start and finish the lines
+# x and y coordinates that we will update to help us draw our 
+# line through the cones. Sets the boundaries for where we 
+# start and finish the lines
 # (b -> bottom), (t -> top), (lef -> left), (rig -> right)
 blefy = 1816
 tlefy = 0
